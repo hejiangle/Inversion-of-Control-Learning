@@ -24,5 +24,13 @@ namespace SimpleIoCContainer.Utilities
         object Resolve<TInterface, TImplementation>();
 
         object Resolve(Type interfaceType, Type implementationType);
+
+        /// <summary>
+        /// Resolve the specific Dependant by using the first implementation.
+        /// </summary>
+        /// <typeparam name="T">
+        /// The type of Dependant.
+        /// </typeparam>
+        object ResolveDependant<T>();
     }
 }

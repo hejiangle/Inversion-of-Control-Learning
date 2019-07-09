@@ -7,11 +7,11 @@ namespace SimpleIoCContainer
     {
         private static void Main(string[] args)
         {
-            var container = new Utilities.SimpleIoCContainer();
-            container.Register();
-            container.Register<StudentController>();
+            Utilities.SimpleIoCContainer.Register();
+            Utilities.SimpleIoCContainer.Register<StudentController>();
 
-            var studentController = (StudentController)container.Resolve(typeof(StudentController));
+//            var studentController = (StudentController)Utilities.SimpleIoCContainer.Resolve<StudentController>();
+            var studentController = (StudentController)Utilities.SimpleIoCContainer.ResolveDependant<StudentController>();
 
             var allAbove90ScoresFemaleStudents = studentController.GetAllAbove90ScoresFemaleStudent();
 

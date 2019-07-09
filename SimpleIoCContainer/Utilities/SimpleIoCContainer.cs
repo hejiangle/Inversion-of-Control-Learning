@@ -11,11 +11,11 @@ namespace SimpleIoCContainer.Utilities
     /// it won't including the lifecycle management,
     /// so that SimpleContainer will create and return new instance each time. 
     /// </summary>
-    public class SimpleIoCContainer : IRegister, IResolver
+    public static class SimpleIoCContainer
     {
-        private readonly Dictionary<Type, List<Type>> _componentPool = new Dictionary<Type, List<Type>>();
+        private static readonly Dictionary<Type, List<Type>> _componentPool = new Dictionary<Type, List<Type>>();
 
-        public void Register()
+        public static void Register()
         {
             var componentTypes = Assembly.GetExecutingAssembly().GetTypes().Where(type =>
                 type.GetCustomAttributes(typeof(ComponentAttribute), false).Length > 0);
@@ -27,7 +27,7 @@ namespace SimpleIoCContainer.Utilities
             }
         }
 
-        public void Register(Type interfaceType)
+        private static void Register(Type interfaceType)
         {
             var uniqueImplementationType = Assembly
                 .GetExecutingAssembly()
@@ -38,12 +38,12 @@ namespace SimpleIoCContainer.Utilities
             _componentPool.Add(interfaceType, new List<Type>{ uniqueImplementationType });
         }
 
-        public void Register<TInterface>()
+        public static void Register<TInterface>()
         {
             Register(typeof(TInterface));
         }
 
-        public void Register(Type interfaceType, Type implementationType)
+        private static void Register(Type interfaceType, Type implementationType)
         {
             if (_componentPool.ContainsKey(interfaceType))
             {
@@ -55,46 +55,83 @@ namespace SimpleIoCContainer.Utilities
             }
         }
 
-        public void Register<TInterface, TImplementation>()
+        public static void Register<TInterface, TImplementation>()
         {
             Register(typeof(TInterface), typeof(TImplementation));
         }
 
-        public void Resolve()
+        public static void Resolve()
         {
             //TODO: Resolve all dependency by using attributes.
         }
 
-        public object Resolve(Type interfaceType)
+        private static object Resolve(Type interfaceType)
         {
             var defaultImplementationType = _componentPool[interfaceType].First();
             
             return Resolve(interfaceType, defaultImplementationType);
         }
 
-        public object Resolve<TInterface>()
+        public static object Resolve<TInterface>()
         {
             return Resolve(typeof(TInterface));
         }
 
-        public object Resolve<TInterface, TImplementation>()
+        public static object Resolve<TInterface, TImplementation>()
         {
             return Resolve(typeof(TInterface), typeof(TImplementation));
         }
 
-        public object Resolve(Type interfaceType, Type implementationType)
+        private static object Resolve(Type interfaceType, Type implementationType)
         {
-            var constructor = implementationType.GetConstructors()[0];
+            var constructor = implementationType.GetConstructors().First();
             var constructorParameters = constructor.GetParameters();
             
-            if (constructorParameters.Length == 0) { 
-                return Activator.CreateInstance(implementationType);  
+            if (constructorParameters.Length == 0)
+            {
+                return Activator.CreateInstance(implementationType);
             }
     
             var parameters = new List<object>(constructorParameters.Length);
             parameters.AddRange(constructorParameters.Select(parameterInfo => Resolve(parameterInfo.ParameterType)));
             
             return constructor.Invoke(parameters.ToArray());
+        }
+
+        public static object ResolveDependant<T>()
+        {
+            return ResolveDependant(typeof(T));
+        }
+
+        private static object ResolveDependant(Type implementationType)
+        {
+            var fields = implementationType.GetFields(BindingFlags.Instance | BindingFlags.NonPublic);
+            var hasDependency = fields.Any(field =>
+                field.GetCustomAttributes(typeof(DependencyAttribute), false).Length > 0);
+
+            if (!hasDependency)
+            {
+                return Activator.CreateInstance(implementationType);
+            }
+
+            var dependencies = fields.Where(field =>
+                field.GetCustomAttributes(typeof(DependencyAttribute), false).Length > 0);
+
+            var dependant = Activator.CreateInstance(implementationType);
+            foreach (var dependency in dependencies)
+            {
+                var dependencyImplementationType = dependency.FieldType;
+                if (dependencyImplementationType.IsInterface)
+                {
+                    dependencyImplementationType = _componentPool[dependency.FieldType].First();
+                }
+
+                implementationType.GetFields(BindingFlags.Instance | BindingFlags.NonPublic)
+                    .First(field => field.Name.Equals(dependency.Name))
+                    .SetValue(dependant,ResolveDependant(dependencyImplementationType));
+            }
+
+            return dependant;
         }
     }
 }

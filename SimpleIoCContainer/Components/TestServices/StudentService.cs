@@ -9,12 +9,13 @@ namespace SimpleIoCContainer.Components.TestServices
     [Component]
     public class StudentService : IStudentService
     {
+        [Dependency]
         private readonly IPersonRepository _personRepository;
 
-        public StudentService(IPersonRepository personRepository)
-        {
-            _personRepository = personRepository;
-        }
+//        public StudentService(IPersonRepository personRepository)
+//        {
+//            _personRepository = personRepository;
+//        }
 
         public IList<Person> GetStudentsByGender(Gender gender)
         {
