@@ -16,18 +16,13 @@ namespace IoCExample.Hosts
             Console.WriteLine("I'm the host of hardcover house...");
         }
 
-        private void BuyAHardCoverHouse(IWorking proxy)
+        public void ToLiveInNewHouse(IWorking proxy)
         {
-            Console.WriteLine("I bought a hardcover house...");
             _hardcoverHouseDeveloper = proxy;
-        }
-
-        public void ToLiveInNewHouse()
-        {
-            BuyAHardCoverHouse(new HardcoverHouseDeveloper());
             _hardcoverHouseDeveloper.Decorate();
             
             Console.WriteLine("Now I can live in new house...");
         }
+        
     }
 }

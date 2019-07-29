@@ -1,5 +1,6 @@
 using System;
 using IoCExample.Hosts;
+using IoCExample.ThirdParty;
 
 namespace IoCExample
 {
@@ -18,7 +19,7 @@ namespace IoCExample
             Console.WriteLine("***************************");
             
             var hardcoverHost = new HardcoverRoomHost();
-            hardcoverHost.ToLiveInNewHouse();
+            hardcoverHost.ToLiveInNewHouse(new HardcoverHouseDeveloper());
         }
     }
 }
